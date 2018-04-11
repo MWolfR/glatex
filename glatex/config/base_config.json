@@ -1,15 +1,15 @@
 {
   "default":{
-    "viewer": "xdg-open",
-    "compiler": "pdflatex",
+    "viewer": {"exe": "xdg-open"},
+    "compiler": {"exe": "pdflatex", "args": ["-interaction=nonstopmode"]},
     "viewer_translator": [],
     "compiler_translator": [],
     "doc_extension": ".pdf"
   },
   "win":{
     "_comment": "alternative configuration for windows machines using wsl. Fill in your own values",
-    "viewer": "/mnt/c/Program Files/SumatraPDF/SumatraPDF.exe",
-    "compiler": "pdflatex",
+    "viewer": {"exe": "/mnt/c/Program Files/SumatraPDF/SumatraPDF.exe"},
+    "compiler": {"exe": "pdflatex", "args": ["-interaction=nonstopmode"]},
     "viewer_translator": [
       {
         "type": "replace_prefix",

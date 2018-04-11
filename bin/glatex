@@ -61,6 +61,8 @@ if __name__ == "__main__":
         subprocess.check_output(["wget", "-O", out_name, gdoc_pat % doc_id])
         subprocess.check_output(["sed", "-i", "-e", sed_command, out_name])
     if do_compile:
-        subprocess.check_output([config["compiler"], "-interaction=nonstopmode", tl1(out_name)])
+        compile = [config["compiler"]["exe"]] + config["compiler"].get("args", []) + [tl1(out_name)]
+        subprocess.check_output(compile)
     if do_open:
-        subprocess.check_output([config["viewer"], tl2(pdf_name)])
+        view = [config["viewer"]["exe"]] + config["viewer"].get("args", []) + [tl2(pdf_name)]
+        subprocess.check_output(view)
