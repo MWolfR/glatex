@@ -1,0 +1,27 @@
+{
+  "default":{
+    "viewer": "xdg-open",
+    "compiler": "pdflatex",
+    "viewer_translator": [],
+    "compiler_translator": [],
+    "doc_extension": ".pdf"
+  },
+  "win":{
+    "_comment": "alternative configuration for windows machines using wsl. Fill in your own values",
+    "viewer": "/mnt/c/Program Files/SumatraPDF/SumatraPDF.exe",
+    "compiler": "pdflatex",
+    "viewer_translator": [
+      {
+        "type": "replace_prefix",
+        "parameters": {"replace": ["/mnt/c/Users", "C:\\Users"],
+                       "alternative": "C:\\Users\\USERNAME\\AppData\\Local\\Packages\\DISTROSTR\\LocalState\\rootfs\\"}
+      },
+      {
+        "type": "replace",
+        "parameters": {"replace": ["/", "\\"]}
+      }
+    ],
+    "compiler_translator": [],
+    "doc_extension": ".pdf"
+  }
+}
