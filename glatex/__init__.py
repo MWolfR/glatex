@@ -9,7 +9,7 @@ def place_default_config(fn):
         os.makedirs(os.path.split(fn)[0])
     fn_default = os.path.join(os.path.split(__file__)[0], 'config', 'base_config.json')
     import shutil
-    print( "No configuration file found at %s. Placing default file. Update contents, if needed!")
+    print( "No configuration file found at %s. Placing default file. Update contents, if needed!" % fn)
     shutil.copy(fn_default, fn)
 
 
@@ -81,7 +81,10 @@ def treat_args(args, append=False):
         if not out_name.endswith('.tex'):
             out_name = out_name + '.tex'
         if append:
-            write_docs(fn_docs % os.getenv('USER'), out_name, doc_id, out_dir, mode='r+')
+            if os.path.isfile(fn_docs % os.getenv('USER')):
+                write_docs(fn_docs % os.getenv('USER'), out_name, doc_id, out_dir, mode='r+')
+            else:
+                write_docs(fn_docs % os.getenv('USER'), out_name, doc_id, out_dir, mode='w')
     return out_name, doc_id, out_dir
 
 
