@@ -10,7 +10,7 @@ sed_command = '1 s/\xEF\xBB\xBF//'
 
 if __name__ == "__main__":
     if '--help' in sys.argv[1:]:
-        print """Usage:
+        print( """Usage:
         NAME document_id /path/to/output.tex
             Where document_id is the unique google doc id. The document must have link sharing without authentication set up!
         NAME document_alias
@@ -26,7 +26,7 @@ if __name__ == "__main__":
             Does not recompile the latex
         NAME --no-open [...]
             Does not open for viewing after completion. For example if it is already open for viewing.
-        """.replace("NAME", os.path.split(__file__)[1])
+        """.replace("NAME", os.path.split(__file__)[1]))
         sys.exit(1)
 
     do_refresh = True
