@@ -9,7 +9,7 @@ def place_default_config(fn):
         os.makedirs(os.path.split(fn)[0])
     fn_default = os.path.join(os.path.split(__file__)[0], 'config', 'base_config.json')
     import shutil
-    print "No configuration file found at %s. Placing default file. Update contents, if needed!"
+    print( "No configuration file found at %s. Placing default file. Update contents, if needed!")
     shutil.copy(fn_default, fn)
 
 
@@ -53,7 +53,7 @@ def read_docs(fn):
                     elif len(splt) == 3:
                         res[splt[0]] = (splt[1], splt[2])
                     else:
-                        print "Warning: Skipping line %s" % ln
+                        print( "Warning: Skipping line %s" % ln)
     return res
 
 
