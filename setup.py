@@ -12,7 +12,7 @@ def find_scripts():
 
 setup(
     name='glatex',
-    version='0.23',
+    version='0.25',
     install_requires=[],
     packages=find_packages(),
     include_package_data=True,
@@ -23,7 +23,7 @@ setup(
     license='Restricted',
     keywords=('latex',
               'GDocs'),
-    url='http://bluebrain.epfl.ch',
+    url='https://gitlab.com/Reimitch/glatex',
     classifiers=['Development Status :: 3 - Alpha',
                  'Environment :: Console',
                  'License :: Proprietary',

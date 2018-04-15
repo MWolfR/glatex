@@ -57,6 +57,14 @@ def read_docs(fn):
     return res
 
 
+def read_doc_from_file(fn):
+    with open(fn, 'r') as fid:
+        doc_id = fid.readline().strip()
+    out_dir = os.path.split(fn)[0]
+    out_name = os.path.splitext(os.path.split(fn)[1])[0] + '.tex'
+    return out_name, doc_id, out_dir
+
+
 def treat_args(args, append=False):
     documents = read_docs(fn_docs % os.getenv('USER'))
     if args[0] == 'LATEST':
@@ -65,6 +73,8 @@ def treat_args(args, append=False):
         args[0] = latest.keys()[0]
         documents.update(latest)
     if len(args) == 1:
+        if os.path.isfile(args[0]):
+            return read_doc_from_file(args[0])
         out_name = args[0]
         assert out_name in documents, ("Unknown doc: %s. Try one of\n%s" % (out_name, str(documents.keys())))
         doc_id = documents[out_name][0]

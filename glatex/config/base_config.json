@@ -7,7 +7,7 @@
     "doc_extension": ".pdf"
   },
   "win":{
-    "_comment": "alternative configuration for windows machines using wsl. Fill in your own values",
+    "_comment": "alternative configuration for windows machines using windows subsystem for linux. Fill in your own values",
     "viewer": {"exe": "/mnt/c/Program Files/SumatraPDF/SumatraPDF.exe"},
     "compiler": {"exe": "pdflatex", "args": ["-interaction=nonstopmode"]},
     "viewer_translator": [

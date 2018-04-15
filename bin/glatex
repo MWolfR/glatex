@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import subprocess
 import sys
+import shutil
 from glatex import *
 
 
@@ -22,15 +23,12 @@ if __name__ == "__main__":
             Creates a new alias with the specified document_id (potentially from an existing alias) and the specified output path
         NAME --no-refresh [...]
             Does not check out latest version from google
-        NAME --no-compile [...]
-            Does not recompile the latex
         NAME --no-open [...]
             Does not open for viewing after completion. For example if it is already open for viewing.
         """.replace("NAME", os.path.split(__file__)[1]))
         sys.exit(1)
 
     do_refresh = True
-    do_compile = True
     do_open = True
     append = False
     profile = 'default'
@@ -38,8 +36,6 @@ if __name__ == "__main__":
     for arg in sys.argv[1:]:
         if arg == '--no-refresh':
             do_refresh = False
-        elif arg == '--no-compile':
-            do_compile = False
         elif arg == '--no-open':
             do_open = False
         elif arg == '--append':
@@ -55,14 +51,15 @@ if __name__ == "__main__":
     out_name, doc_id, out_dir = treat_args(args, append=append)
     assert os.path.isdir(out_dir), ("%s not a directory!" % out_dir)
     write_latest(out_name, doc_id, out_dir)
-    os.chdir(out_dir)
+    os.chdir('/tmp')
     pdf_name = os.path.splitext(out_name)[0] + config['doc_extension']
     if do_refresh:
         subprocess.check_output(["wget", "-O", out_name, gdoc_pat % doc_id])
         subprocess.check_output(["sed", "-i", "-e", sed_command, out_name])
-    if do_compile:
         compile = [config["compiler"]["exe"]] + config["compiler"].get("args", []) + [tl1(out_name)]
         subprocess.check_output(compile)
+        shutil.copy(pdf_name, out_dir)
+    os.chdir(out_dir)
     if do_open:
         view = [config["viewer"]["exe"]] + config["viewer"].get("args", []) + [tl2(pdf_name)]
         subprocess.check_output(view)
