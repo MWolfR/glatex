@@ -18,8 +18,7 @@ def read_config(fn, which_one='default'):
     with open(fn, 'r') as fid:
         j = json.load(fid)
     config = j[which_one]
-    req = ["viewer", "compiler", "compiler_translator",
-           "viewer_translator", "doc_extension"]
+    req = ["viewer", "compiler", "doc_extension"]
     for _r in req:
         assert _r in config, "%s not specified by %s/%s" % (_r, fn, which_one)
     return config
@@ -27,7 +26,8 @@ def read_config(fn, which_one='default'):
 
 def filename_translator(cfg):
     def translate(fn):
-        fn = os.path.abspath(fn)
+        if os.path.exists(fn):
+            fn = os.path.abspath(fn)
         for tl in cfg:
             p = tl["parameters"]
             if tl["type"] == "replace_prefix":
@@ -61,11 +61,11 @@ def read_doc_from_file(fn):
     with open(fn, 'r') as fid:
         doc_id = fid.readline().strip()
     out_dir = os.path.split(fn)[0]
-    out_name = os.path.splitext(os.path.split(fn)[1])[0] + '.tex'
+    out_name = os.path.split(fn)[1]
     return out_name, doc_id, out_dir
 
 
-def treat_args(args, append=False):
+def treat_args(args, append=False, translator=lambda x: x):
     documents = read_docs(fn_docs % os.getenv('USER'))
     if args[0] == 'LATEST':
         latest = read_docs(fn_latest % os.getenv('USER'))
@@ -73,28 +73,27 @@ def treat_args(args, append=False):
         args[0] = latest.keys()[0]
         documents.update(latest)
     if len(args) == 1:
-        if os.path.isfile(args[0]):
-            return read_doc_from_file(args[0])
-        out_name = args[0]
-        assert out_name in documents, ("Unknown doc: %s. Try one of\n%s" % (out_name, str(documents.keys())))
-        doc_id = documents[out_name][0]
-        out_dir = documents[out_name][1]
-        if not out_name.endswith('.tex'):
-            out_name = out_name + '.tex'
+        if os.path.isfile(translator(args[0])):
+            out_name, doc_id, out_dir = read_doc_from_file(translator(args[0]))
+        else:
+            out_name = args[0]
+            assert out_name in documents, ("Unknown doc: %s. Try one of\n%s" % (out_name, str(documents.keys())))
+            append = False
+            doc_id = documents[out_name][0]
+            out_dir = documents[out_name][1]
     else:
-        out_dir, out_name = os.path.split(args[1])
+        out_dir, out_name = os.path.split(translator(args[1]))
         if len(out_dir) == 0:
             out_dir = os.getcwd()
         doc_id = args[0]
         if doc_id in documents:
             doc_id = documents[doc_id][0]
-        if not out_name.endswith('.tex'):
-            out_name = out_name + '.tex'
-        if append:
-            if os.path.isfile(fn_docs % os.getenv('USER')):
-                write_docs(fn_docs % os.getenv('USER'), out_name, doc_id, out_dir, mode='r+')
-            else:
-                write_docs(fn_docs % os.getenv('USER'), out_name, doc_id, out_dir, mode='w')
+    out_name = os.path.splitext(out_name)[0]
+    if append:
+        if os.path.isfile(fn_docs % os.getenv('USER')):
+            write_docs(fn_docs % os.getenv('USER'), out_name, doc_id, out_dir, mode='r+')
+        else:
+            write_docs(fn_docs % os.getenv('USER'), out_name, doc_id, out_dir, mode='w')
     return out_name, doc_id, out_dir
 
 

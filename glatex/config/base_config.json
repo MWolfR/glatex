@@ -2,18 +2,26 @@
   "default":{
     "viewer": {"exe": "xdg-open"},
     "compiler": {"exe": "pdflatex", "args": ["-interaction=nonstopmode"]},
-    "viewer_translator": [],
-    "compiler_translator": [],
     "doc_extension": ".pdf"
   },
   "win":{
     "_comment": "alternative configuration for windows machines using windows subsystem for linux. Fill in your own values",
     "viewer": {"exe": "/mnt/c/Program Files/SumatraPDF/SumatraPDF.exe"},
     "compiler": {"exe": "pdflatex", "args": ["-interaction=nonstopmode"]},
+    "input_translator": [
+      {
+        "type": "replace_prefix",
+        "parameters": {"replace": ["C:\\", "/mnt/c"]}
+      },
+      {
+        "type": "replace",
+        "parameters": {"replace": ["\\", "/"]}
+      }
+    ],
     "viewer_translator": [
       {
         "type": "replace_prefix",
-        "parameters": {"replace": ["/mnt/c/Users", "C:\\Users"],
+        "parameters": {"replace": ["/mnt/c", "C:\\"],
                        "alternative": "C:\\Users\\USERNAME\\AppData\\Local\\Packages\\DISTROSTR\\LocalState\\rootfs\\"}
       },
       {
@@ -21,7 +29,6 @@
         "parameters": {"replace": ["/", "\\"]}
       }
     ],
-    "compiler_translator": [],
     "doc_extension": ".pdf"
   }
 }
