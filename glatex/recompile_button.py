@@ -22,7 +22,7 @@ class Recompiler(object):
         from glatex import main, read_latest
         out_name, doc_id, out_dir = read_latest()
         main(out_name, doc_id, out_dir, self.config, self.translators,
-             do_refresh=True, do_open=False, make_button=False)
+             do_refresh=True, do_open=False, make_button=False, write_to=self)
 
     def create(self):
 
@@ -35,4 +35,14 @@ class Recompiler(object):
         self.button1 = tk.Button(self.root, image=self.img, command=self.run_recompile)
         self.button1.grid(row=1, column=0)
 
+        self.text = tk.Text(self.root)
+        self.text.grid(row=2, column=0)
+
         self.root.mainloop()
+
+    def write(self, a_string):
+        self.text.insert(tk.END, a_string)
+        self.text.see(tk.END)
+
+    def clear(self):
+        self.text.delete('1.0', tk.END)

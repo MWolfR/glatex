@@ -1,6 +1,7 @@
 import os
 import subprocess
 import shutil
+import sys
 fn_docs = '/home/%s/.config/glatex/documents'
 fn_latest = '/home/%s/.config/glatex/latest'
 fn_config = '/home/%s/.config/glatex/config.json'
@@ -167,20 +168,40 @@ def configure(argv):
     return config, (tl0, tl1, tl2), args, kwargs
 
 
+def redirect_to_writer(writer):
+    def call(command):
+        writer.clear()
+        proc = subprocess.Popen(command, stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT, bufsize=0)
+        retcode = proc.poll()
+        while retcode is None:
+            writer.write(proc.stdout.read(1))
+            retcode = proc.poll()
+        writer.write(proc.stdout.read())
+        if retcode:
+            raise Exception("Error in redirected call!")
+    return call
+
+
 def main(out_name, doc_id, out_dir, config, translators,
-         do_refresh=True, do_open=True, make_button=True):
+         do_refresh=True, do_open=True, make_button=True, write_to=None):
     gdoc_pat = 'https://docs.google.com/document/export?format=txt&id=%s'
     sed_command = r'1 s/\xEF\xBB\xBF//'
+
+    if write_to is None:
+        call = subprocess.call
+    else:
+        call = redirect_to_writer(write_to)
 
     tl1, tl2 = translators
     os.chdir('/tmp')
     pdf_name = out_name + config['doc_extension']
     tex_name = out_name + '.tex'
     if do_refresh:
-        subprocess.call(["wget", "-O", tex_name, gdoc_pat % doc_id])
-        subprocess.call(["sed", "-i", "-e", sed_command, tex_name])
+        call(["wget", "-O", tex_name, gdoc_pat % doc_id])
+        call(["sed", "-i", "-e", sed_command, tex_name])
         compile = [config["compiler"]["exe"]] + config["compiler"].get("args", []) + [tl1(tex_name)]
-        subprocess.call(compile)
+        call(compile)
         shutil.copy(pdf_name, out_dir)
     os.chdir(out_dir)
     if do_open:
