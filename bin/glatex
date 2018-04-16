@@ -25,6 +25,8 @@ if __name__ == "__main__":
             Does not check out latest version from google
         NAME --no-open [...]
             Does not open for viewing after completion. For example if it is already open for viewing.
+        NAME --no-button [...]
+            Does not create the 'recompile' button.
         """.replace("NAME", os.path.split(__file__)[1]))
         sys.exit(1)
 
@@ -33,4 +35,5 @@ if __name__ == "__main__":
     assert os.path.isdir(out_dir), ("%s not a directory!" % out_dir)
     write_latest(out_name, doc_id, out_dir)
     main(out_name, doc_id, out_dir, config, translators[1:],
-         do_refresh=kwargs['do_refresh'], do_open=kwargs['do_open'])
+         do_refresh=kwargs['do_refresh'], do_open=kwargs['do_open'],
+         make_button=kwargs['make_button'])

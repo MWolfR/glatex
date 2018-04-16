@@ -59,6 +59,15 @@ def read_docs(fn):
     return res
 
 
+def read_latest():
+    latest = read_docs(fn_latest % os.getenv('USER'))
+    assert len(latest) > 0, "No recent document found!"
+    out_name = latest.keys()[0]
+    doc_id = latest[out_name][0]
+    out_dir = latest[out_name][1]
+    return out_name, doc_id, out_dir
+
+
 def read_doc_from_file(fn):
     with open(fn, 'r') as fid:
         doc_id = fid.readline().strip()
@@ -126,7 +135,8 @@ def configure(argv):
     args = []
     kwargs = {'do_refresh': True,
               'do_open': True,
-              'append': False}
+              'append': False,
+              'make_button': True}
     for arg in argv:
         if arg == '--no-refresh':
             kwargs['do_refresh'] = False
@@ -136,6 +146,8 @@ def configure(argv):
             do_translate_input = False
         elif arg == '--append':
             kwargs['append'] = True
+        elif arg == '--no-button':
+            kwargs['make_button'] = False
         elif arg.startswith('--profile='):
             profile = arg[10:]
         else:
@@ -151,7 +163,7 @@ def configure(argv):
 
 
 def main(out_name, doc_id, out_dir, config, translators,
-         do_refresh=True, do_open=True):
+         do_refresh=True, do_open=True, make_button=True):
     gdoc_pat = 'https://docs.google.com/document/export?format=txt&id=%s'
     sed_command = r'1 s/\xEF\xBB\xBF//'
 
@@ -160,12 +172,16 @@ def main(out_name, doc_id, out_dir, config, translators,
     pdf_name = out_name + config['doc_extension']
     tex_name = out_name + '.tex'
     if do_refresh:
-        subprocess.check_output(["wget", "-O", tex_name, gdoc_pat % doc_id])
-        subprocess.check_output(["sed", "-i", "-e", sed_command, tex_name])
+        subprocess.call(["wget", "-O", tex_name, gdoc_pat % doc_id])
+        subprocess.call(["sed", "-i", "-e", sed_command, tex_name])
         compile = [config["compiler"]["exe"]] + config["compiler"].get("args", []) + [tl1(tex_name)]
-        subprocess.check_output(compile)
+        subprocess.call(compile)
         shutil.copy(pdf_name, out_dir)
     os.chdir(out_dir)
     if do_open:
+        from .recompile_button import Recompiler
         view = [config["viewer"]["exe"]] + config["viewer"].get("args", []) + [tl2(pdf_name)]
-        subprocess.check_output(view)
+        proc = subprocess.Popen(view)
+        if make_button:
+            button = Recompiler(config, translators)
+        proc.wait()
