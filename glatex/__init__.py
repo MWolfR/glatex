@@ -70,7 +70,12 @@ def read_latest():
 
 def read_doc_from_file(fn):
     with open(fn, 'r') as fid:
-        doc_id = fid.readline().strip()
+        ln = fid.readline()
+        while ln.startswith('#'):
+            ln = fid.readline()
+        doc_id = ln.strip()
+    if len(doc_id) == 0:
+        raise Exception("No document id found in %s" % fn)
     out_dir = os.path.split(fn)[0]
     out_name = os.path.split(fn)[1]
     return out_name, doc_id, out_dir
