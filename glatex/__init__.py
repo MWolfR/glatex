@@ -1,4 +1,6 @@
 import os
+import subprocess
+import shutil
 fn_docs = '/home/%s/.config/glatex/documents'
 fn_latest = '/home/%s/.config/glatex/latest'
 fn_config = '/home/%s/.config/glatex/config.json'
@@ -116,3 +118,54 @@ def write_docs(fn, out_name, doc_id, out_dir, mode='r+'):
 def write_latest(out_name, doc_id, out_dir):
     fn = fn_latest % os.getenv('USER')
     write_docs(fn, out_name, doc_id, out_dir, mode='w')
+
+
+def configure(argv):
+    do_translate_input = True
+    profile = 'default'
+    args = []
+    kwargs = {'do_refresh': True,
+              'do_open': True,
+              'append': False}
+    for arg in argv:
+        if arg == '--no-refresh':
+            kwargs['do_refresh'] = False
+        elif arg == '--no-open':
+            kwargs['do_open'] = False
+        elif arg == '--no-translate':
+            do_translate_input = False
+        elif arg == '--append':
+            kwargs['append'] = True
+        elif arg.startswith('--profile='):
+            profile = arg[10:]
+        else:
+            args.append(arg)
+    assert len(args) > 0, "No input specified!"
+    config = get_config(profile)
+    tl0 = lambda x: x
+    if do_translate_input:
+        tl0 = filename_translator(config.get("input_translator", []))
+    tl1 = filename_translator(config.get("compiler_translator", []))
+    tl2 = filename_translator(config.get("viewer_translator", []))
+    return config, (tl0, tl1, tl2), args, kwargs
+
+
+def main(out_name, doc_id, out_dir, config, translators,
+         do_refresh=True, do_open=True):
+    gdoc_pat = 'https://docs.google.com/document/export?format=txt&id=%s'
+    sed_command = r'1 s/\xEF\xBB\xBF//'
+
+    tl1, tl2 = translators
+    os.chdir('/tmp')
+    pdf_name = out_name + config['doc_extension']
+    tex_name = out_name + '.tex'
+    if do_refresh:
+        subprocess.check_output(["wget", "-O", tex_name, gdoc_pat % doc_id])
+        subprocess.check_output(["sed", "-i", "-e", sed_command, tex_name])
+        compile = [config["compiler"]["exe"]] + config["compiler"].get("args", []) + [tl1(tex_name)]
+        subprocess.check_output(compile)
+        shutil.copy(pdf_name, out_dir)
+    os.chdir(out_dir)
+    if do_open:
+        view = [config["viewer"]["exe"]] + config["viewer"].get("args", []) + [tl2(pdf_name)]
+        subprocess.check_output(view)

@@ -28,45 +28,9 @@ if __name__ == "__main__":
         """.replace("NAME", os.path.split(__file__)[1]))
         sys.exit(1)
 
-    do_refresh = True
-    do_open = True
-    do_translate_input = True
-    append = False
-    profile = 'default'
-    args = []
-    for arg in sys.argv[1:]:
-        if arg == '--no-refresh':
-            do_refresh = False
-        elif arg == '--no-open':
-            do_open = False
-        elif arg == '--no-translate':
-            do_translate_input = False
-        elif arg == '--append':
-            append = True
-        elif arg.startswith('--profile='):
-            profile = arg[10:]
-        else:
-            args.append(arg)
-    assert len(args) > 0, "No input specified!"
-    config = get_config(profile)
-    tl0 = lambda x: x
-    if do_translate_input:
-        tl0 = filename_translator(config.get("input_translator", []))
-    tl1 = filename_translator(config.get("compiler_translator", []))
-    tl2 = filename_translator(config.get("viewer_translator", []))
-    out_name, doc_id, out_dir = treat_args(args, append=append, translator=tl0)
+    config, translators, args, kwargs = configure(sys.argv[1:])
+    out_name, doc_id, out_dir = treat_args(args, append=kwargs['append'], translator=translators[0])
     assert os.path.isdir(out_dir), ("%s not a directory!" % out_dir)
     write_latest(out_name, doc_id, out_dir)
-    os.chdir('/tmp')
-    pdf_name = out_name + config['doc_extension']
-    tex_name = out_name + '.tex'
-    if do_refresh:
-        subprocess.check_output(["wget", "-O", tex_name, gdoc_pat % doc_id])
-        subprocess.check_output(["sed", "-i", "-e", sed_command, tex_name])
-        compile = [config["compiler"]["exe"]] + config["compiler"].get("args", []) + [tl1(tex_name)]
-        subprocess.check_output(compile)
-        shutil.copy(pdf_name, out_dir)
-    os.chdir(out_dir)
-    if do_open:
-        view = [config["viewer"]["exe"]] + config["viewer"].get("args", []) + [tl2(pdf_name)]
-        subprocess.check_output(view)
+    main(out_name, doc_id, out_dir, config, translators[1:],
+         do_refresh=kwargs['do_refresh'], do_open=kwargs['do_open'])
