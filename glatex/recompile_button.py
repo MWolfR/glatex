@@ -44,5 +44,10 @@ class Recompiler(object):
         self.text.insert(tk.END, a_string)
         self.text.see(tk.END)
 
+    def error(self, retcode):
+        msg = "ERROR--ERROR--ERROR\nProcess returned %s. Log above." % str(retcode)
+        self.text.insert(tk.END, msg)
+        raise Exception()
+
     def clear(self):
         self.text.delete('1.0', tk.END)

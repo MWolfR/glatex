@@ -179,8 +179,30 @@ def redirect_to_writer(writer):
             retcode = proc.poll()
         writer.write(proc.stdout.read())
         if retcode:
-            raise Exception("Error in redirected call!")
+            writer.error(retcode)
     return call
+
+
+class SimpleErrorHandler(object):
+
+    def __init__(self, type_str):
+        self.type_str = type_str
+        self.log_buffer = []
+
+    def write(self, a_str):
+        self.log_buffer.append(a_str)
+
+    def clear(self):
+        pass
+
+    def error(self, retcode):
+        msg = """ERROR in step %s.
+        Process returned %s.
+        Full output:
+        %s""" % (self.type_str, str(retcode), ''.join(self.log_buffer))
+        self.log_buffer = []
+        sys.stdout.write(msg)
+        sys.exit(2)
 
 
 def main(out_name, doc_id, out_dir, config, translators,
@@ -189,19 +211,21 @@ def main(out_name, doc_id, out_dir, config, translators,
     sed_command = r'1 s/\xEF\xBB\xBF//'
 
     if write_to is None:
-        call = subprocess.call
+        handlers = [SimpleErrorHandler("1: getting latest version"),
+                    SimpleErrorHandler("2: preparing for compilation"),
+                    SimpleErrorHandler("3: compile latex")]
     else:
-        call = redirect_to_writer(write_to)
+        handlers = [write_to, write_to, write_to]
 
     tl1, tl2 = translators
     os.chdir('/tmp')
     pdf_name = out_name + config['doc_extension']
     tex_name = out_name + '.tex'
     if do_refresh:
-        call(["wget", "-O", tex_name, gdoc_pat % doc_id])
-        call(["sed", "-i", "-e", sed_command, tex_name])
+        redirect_to_writer(handlers[0])(["wget", "-O", tex_name, gdoc_pat % doc_id])
+        redirect_to_writer(handlers[1])(["sed", "-i", "-e", sed_command, tex_name])
         compile = [config["compiler"]["exe"]] + config["compiler"].get("args", []) + [tl1(tex_name)]
-        call(compile)
+        redirect_to_writer(handlers[2])(compile)
         shutil.copy(pdf_name, out_dir)
     os.chdir(out_dir)
     if do_open:
