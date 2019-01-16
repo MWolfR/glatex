@@ -2,9 +2,9 @@ import os
 import subprocess
 import shutil
 import sys
-fn_docs = '/home/%s/.config/glatex/documents'
-fn_latest = '/home/%s/.config/glatex/latest'
-fn_config = '/home/%s/.config/glatex/config.json'
+fn_docs = '.config/glatex/documents'
+fn_latest = '.config/glatex/latest'
+fn_config = '.config/glatex/config.json'
 
 
 def place_default_config(fn):
@@ -61,7 +61,7 @@ def read_docs(fn):
 
 
 def read_latest():
-    latest = read_docs(fn_latest % os.getenv('USER'))
+    latest = read_docs(os.path.join(os.getenv('HOME', ''), fn_latest))
     assert len(latest) > 0, "No recent document found!"
     out_name = latest.keys()[0]
     doc_id = latest[out_name][0]
@@ -83,9 +83,9 @@ def read_doc_from_file(fn):
 
 
 def treat_args(args, append=False, translator=lambda x: x):
-    documents = read_docs(fn_docs % os.getenv('USER'))
+    documents = read_docs(os.path.join(os.getenv('HOME', ''), fn_docs))
     if args[0] == 'LATEST':
-        latest = read_docs(fn_latest % os.getenv('USER'))
+        latest = read_docs(os.path.join(os.getenv('HOME', ''), fn_latest))
         assert len(latest) > 0, "No recent document found!"
         args[0] = latest.keys()[0]
         documents.update(latest)
@@ -107,15 +107,15 @@ def treat_args(args, append=False, translator=lambda x: x):
             doc_id = documents[doc_id][0]
     out_name = os.path.splitext(out_name)[0]
     if append:
-        if os.path.isfile(fn_docs % os.getenv('USER')):
-            write_docs(fn_docs % os.getenv('USER'), out_name, doc_id, out_dir, mode='r+')
+        if os.path.isfile(os.path.join(os.getenv('HOME', ''), fn_docs)):
+            write_docs(os.path.join(os.getenv('HOME', ''), fn_docs), out_name, doc_id, out_dir, mode='r+')
         else:
-            write_docs(fn_docs % os.getenv('USER'), out_name, doc_id, out_dir, mode='w')
+            write_docs(os.path.join(os.getenv('HOME', ''), fn_docs), out_name, doc_id, out_dir, mode='w')
     return out_name, doc_id, out_dir
 
 
 def get_config(profile):
-    fn = fn_config % os.getenv('USER')
+    fn = os.path.join(os.getenv('HOME', ''), fn_config)
     if not os.path.exists(fn):
         place_default_config(fn)
     cfg = read_config(fn, which_one=profile)
@@ -131,7 +131,7 @@ def write_docs(fn, out_name, doc_id, out_dir, mode='r+'):
 
 
 def write_latest(out_name, doc_id, out_dir):
-    fn = fn_latest % os.getenv('USER')
+    fn = os.path.join(os.getenv('HOME', ''), fn_latest)
     write_docs(fn, out_name, doc_id, out_dir, mode='w')
 
 
@@ -142,7 +142,8 @@ def configure(argv):
     kwargs = {'do_refresh': True,
               'do_open': True,
               'append': False,
-              'make_button': True}
+              'make_button': True,
+              'included_files': True}
     for arg in argv:
         if arg == '--no-refresh':
             kwargs['do_refresh'] = False
@@ -154,6 +155,8 @@ def configure(argv):
             kwargs['append'] = True
         elif arg == '--no-button':
             kwargs['make_button'] = False
+        elif arg == '--no-included-files':
+            kwargs['included_files'] = False
         elif arg.startswith('--profile='):
             profile = arg[10:]
         else:
@@ -206,7 +209,9 @@ class SimpleErrorHandler(object):
 
 
 def main(out_name, doc_id, out_dir, config, translators,
-         do_refresh=True, do_open=True, make_button=True, write_to=None):
+         do_refresh=True, do_open=True, make_button=True, write_to=None,
+         included_files=True):
+    from include_files import check_out_files
     gdoc_pat = 'https://docs.google.com/document/export?format=txt&id=%s'
     sed_command = r'1 s/\xEF\xBB\xBF//'
 
@@ -224,6 +229,8 @@ def main(out_name, doc_id, out_dir, config, translators,
     if do_refresh:
         redirect_to_writer(handlers[0])(["wget", "-O", tex_name, gdoc_pat % doc_id])
         redirect_to_writer(handlers[1])(["sed", "-i", "-e", sed_command, tex_name])
+        if included_files:
+            check_out_files(tex_name)
         compile = [config["compiler"]["exe"]] + config["compiler"].get("args", []) + [tl1(tex_name)]
         redirect_to_writer(handlers[2])(compile)
         shutil.copy(pdf_name, out_dir)
