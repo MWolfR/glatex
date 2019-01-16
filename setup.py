@@ -12,7 +12,7 @@ def find_scripts():
 
 setup(
     name='glatex',
-    version='0.38',
+    version='0.39',
     install_requires=[],
     packages=find_packages(),
     include_package_data=True,
