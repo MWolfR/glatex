@@ -208,6 +208,21 @@ class SimpleErrorHandler(object):
         sys.exit(2)
 
 
+def run_detached(command):
+    import platform
+    #based on https://stackoverflow.com/questions/43457222/run-python-subprocess-using-popen-independently
+    if platform.system() == 'Windows':
+        CREATE_NEW_PROCESS_GROUP = 0x00000200
+        DETACHED_PROCESS = 0x00000008
+        proc = subprocess.Popen(command, creationflags=CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS)
+    elif platform.system() == 'Linux':
+        proc = subprocess.Popen(['nohup'] + command, preexec_fn=os.setpgrp)
+    else:
+        #Fallback: Not detached at all. In that case return process so we can wait for it
+        proc = subprocess.Popen(command)
+        return proc
+
+
 def main(out_name, doc_id, out_dir, config, translators,
          do_refresh=True, do_open=True, make_button=True, write_to=None,
          included_files=True):
@@ -238,7 +253,13 @@ def main(out_name, doc_id, out_dir, config, translators,
     if do_open:
         from .recompile_button import Recompiler
         view = [config["viewer"]["exe"]] + config["viewer"].get("args", []) + [tl2(pdf_name)]
-        proc = subprocess.Popen(view)
+        proc = run_detached(view)
         if make_button:
-            button = Recompiler(config, translators)
-        proc.wait()
+            pid = os.fork()
+            if pid == 0:
+                button = Recompiler(config, translators)
+        if proc is not None:
+            proc.wait()
+        else:
+            from time import sleep
+            sleep(1)
