@@ -2,12 +2,14 @@
   "default":{
     "viewer": {"exe": "xdg-open"},
     "compiler": {"exe": "pdflatex", "args": ["-interaction=nonstopmode"]},
+    "bibtex": {"exe": "bibtex", "args": []},
     "doc_extension": ".pdf"
   },
   "win":{
     "_comment": "alternative configuration for windows machines using windows subsystem for linux. Fill in your own values",
     "viewer": {"exe": "/mnt/c/Program Files/SumatraPDF/SumatraPDF.exe"},
     "compiler": {"exe": "pdflatex", "args": ["-interaction=nonstopmode"]},
+    "bibtex": {"exe": "bibtex", "args": []},
     "input_translator": [
       {
         "type": "replace_prefix",

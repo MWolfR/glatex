@@ -143,7 +143,8 @@ def configure(argv):
               'do_open': True,
               'append': False,
               'make_button': True,
-              'included_files': True}
+              'included_files': True,
+              'bibtex': False}
     for arg in argv:
         if arg == '--no-refresh':
             kwargs['do_refresh'] = False
@@ -159,6 +160,8 @@ def configure(argv):
             kwargs['included_files'] = False
         elif arg.startswith('--profile='):
             profile = arg[10:]
+        elif arg == '--bibtex':
+            kwargs['bibtex'] = True
         else:
             args.append(arg)
     assert len(args) > 0, "No input specified!"
@@ -225,7 +228,7 @@ def run_detached(command):
 
 def main(out_name, doc_id, out_dir, config, translators,
          do_refresh=True, do_open=True, make_button=True, write_to=None,
-         included_files=True):
+         included_files=True, bibtex=False):
     from include_files import check_out_files
     gdoc_pat = 'https://docs.google.com/document/export?format=txt&id=%s'
     sed_command = r'1 s/\xEF\xBB\xBF//'
@@ -248,6 +251,12 @@ def main(out_name, doc_id, out_dir, config, translators,
             check_out_files(tex_name)
         compile = [config["compiler"]["exe"]] + config["compiler"].get("args", []) + [tl1(tex_name)]
         redirect_to_writer(handlers[2])(compile)
+        if bibtex:
+            run_bib = [config["bibtex"]["exe"]] + config["bibtex"].get("args", []) + [tl1(out_name)]
+            redirect_to_writer(handlers[2])(run_bib)
+            redirect_to_writer(handlers[2])(run_bib)
+            redirect_to_writer(handlers[2])(compile)
+            redirect_to_writer(handlers[2])(compile)
         shutil.copy(pdf_name, out_dir)
     os.chdir(out_dir)
     if do_open:
