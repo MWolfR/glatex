@@ -200,21 +200,22 @@ class SimpleErrorHandler(object):
         self.log_buffer = []
 
     def write(self, a_str):
-        if isinstance(a_str, str):
-            self.log_buffer.append(a_str)
-        elif isinstance(a_str, bytes):
-            self.log_buffer.append(a_str.decode('utf-8'))
+        self.log_buffer.append(a_str)
 
     def clear(self):
         pass
 
     def error(self, retcode):
+        try:
+            full_msg = ''.join(self.log_buffer)
+        except TypeError:
+            full_msg = (b''.join(self.log_buffer)).decode('utf-8', errors='replace')
         msg = """ERROR in step {step_name}.
         Process returned {proc_ret}.
         Full output:
         {log_out}""".format(step_name=self.type_str,
                             proc_ret=retcode,
-                            log_out=''.join(self.log_buffer))
+                            log_out=full_msg)
         self.log_buffer = []
         sys.stdout.write(msg)
         sys.exit(2)
