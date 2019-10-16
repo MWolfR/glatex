@@ -1,3 +1,7 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import str
+from builtins import object
 import os
 import subprocess
 import shutil
@@ -63,7 +67,7 @@ def read_docs(fn):
 def read_latest():
     latest = read_docs(os.path.join(os.getenv('HOME', ''), fn_latest))
     assert len(latest) > 0, "No recent document found!"
-    out_name = latest.keys()[0]
+    out_name = list(latest.keys())[0]
     doc_id = latest[out_name][0]
     out_dir = latest[out_name][1]
     return out_name, doc_id, out_dir
@@ -87,14 +91,14 @@ def treat_args(args, append=False, translator=lambda x: x):
     if args[0] == 'LATEST':
         latest = read_docs(os.path.join(os.getenv('HOME', ''), fn_latest))
         assert len(latest) > 0, "No recent document found!"
-        args[0] = latest.keys()[0]
+        args[0] = list(latest.keys())[0]
         documents.update(latest)
     if len(args) == 1:
         if os.path.isfile(translator(args[0])):
             out_name, doc_id, out_dir = read_doc_from_file(translator(args[0]))
         else:
             out_name = args[0]
-            assert out_name in documents, ("Unknown doc: %s. Try one of\n%s" % (out_name, str(documents.keys())))
+            assert out_name in documents, ("Unknown doc: %s. Try one of\n%s" % (out_name, str(list(documents.keys()))))
             append = False
             doc_id = documents[out_name][0]
             out_dir = documents[out_name][1]
@@ -229,7 +233,7 @@ def run_detached(command):
 def main(out_name, doc_id, out_dir, config, translators,
          do_refresh=True, do_open=True, make_button=True, write_to=None,
          included_files=True, bibtex=False):
-    from include_files import check_out_files
+    from .include_files import check_out_files
     gdoc_pat = 'https://docs.google.com/document/export?format=txt&id=%s'
     sed_command = r'1 s/\xEF\xBB\xBF//'
 

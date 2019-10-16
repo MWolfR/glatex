@@ -3,7 +3,7 @@ import os
 
 def download_file_from_google_drive(id, destination):
     def get_confirm_token(response):
-        for key, value in response.cookies.items():
+        for key, value in list(response.cookies.items()):
             if key.startswith('download_warning'):
                 return value
 
