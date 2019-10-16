@@ -196,20 +196,25 @@ def redirect_to_writer(writer):
 class SimpleErrorHandler(object):
 
     def __init__(self, type_str):
-        self.type_str = type_str
+        self.type_str = str(type_str)
         self.log_buffer = []
 
     def write(self, a_str):
-        self.log_buffer.append(a_str)
+        if isinstance(a_str, str):
+            self.log_buffer.append(a_str)
+        elif isinstance(a_str, bytes):
+            self.log_buffer.append(a_str.decode('utf-8'))
 
     def clear(self):
         pass
 
     def error(self, retcode):
-        msg = """ERROR in step %s.
-        Process returned %s.
+        msg = """ERROR in step {step_name}.
+        Process returned {proc_ret}.
         Full output:
-        %s""" % (self.type_str, str(retcode), ''.join(self.log_buffer))
+        {log_out}""".format(step_name=self.type_str,
+                            proc_ret=retcode,
+                            log_out=''.join(self.log_buffer))
         self.log_buffer = []
         sys.stdout.write(msg)
         sys.exit(2)
